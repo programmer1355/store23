@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تفاصيل المنتج | اونمي</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-row">
+    <a href="index.html" class="brand"><span class="brand-mark">او</span>اونمي</a>
+    <nav class="main-nav">
+      <a href="index.html">الرئيسية</a>
+      <a href="products.html">المنتجات</a>
+      <a href="index.html#about">من نحن</a>
+      <a href="index.html#contact">تواصل معنا</a>
+    </nav>
+    <div class="header-actions">
+      <form class="search-box" data-header-search>
+        <svg viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6"/><path d="m18 18-3.8-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="text" placeholder="ابحث عن منتج...">
+      </form>
+      <a href="cart.html" class="cart-link">سلة التسوق <span class="cart-count" data-cart-count>0</span></a>
+    </div>
+  </div>
+</header>
+
+<section class="section container" id="product-root">
+  <!-- يُملأ عبر JavaScript -->
+</section>
+
+<section class="section container" id="related-wrap" style="display:none;">
+  <div class="section-head"><div><h2>منتجات مشابهة</h2></div></div>
+  <div class="product-grid" id="related-grid"></div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-bottom">
+    <span>© 2026 متجر اونمي. جميع الحقوق محفوظة.</span>
+    <a href="index.html">العودة للرئيسية</a>
+  </div>
+</footer>
+
+<script src="js/products-data.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/main.js"></script>
+<script>
+  const id = new URLSearchParams(location.search).get("id");
+  const p = findProduct(id);
+  const root = document.getElementById("product-root");
+
+  if (!p){
+    root.innerHTML = `<div class="empty-state"><h3>لم يتم العثور على المنتج</h3><p>ربما تم حذفه أو الرابط غير صحيح.</p><a href="products.html" class="btn btn-primary">تصفح المنتجات</a></div>`;
+  } else {
+    document.title = p.name + " | اونمي";
+    const low = p.stock <= 10;
+    root.innerHTML = `
+      <div class="pd-layout">
+        <div class="pd-gallery">${onemiIcon(p.category)}</div>
+        <div class="pd-info">
+          <div class="breadcrumbs"><a href="index.html">الرئيسية</a> ← <a href="products.html?cat=${p.category}">${p.categoryName}</a> ← ${p.name}</div>
+          <h1>${p.name}</h1>
+          <div class="pd-meta">
+            ${starRow(p.rating)}
+            <span style="font-size:.85rem; color:var(--ink-soft);">(${p.reviews} تقييم)</span>
+            <span class="stock-pill ${low ? 'low' : ''}">${low ? 'الكمية محدودة: ' + p.stock + ' متبقية' : 'متوفر في المخزون'}</span>
+          </div>
+          <div class="pd-price">
+            ${formatPrice(p.price)}
+            ${p.oldPrice ? `<span class="price-old" style="font-size:1.1rem; margin-inline-start:10px;">${formatPrice(p.oldPrice)}</span>` : ""}
+          </div>
+          <p>${p.short}</p>
+
+          <div class="qty-row">
+            <div class="qty-control">
+              <button type="button" id="qty-minus">−</button>
+              <input type="text" id="qty-input" value="1" inputmode="numeric">
+              <button type="button" id="qty-plus">+</button>
+            </div>
+            <span style="font-size:.85rem; color:var(--ink-soft);">الحد الأقصى ${p.stock} قطعة</span>
+          </div>
+
+          <div class="pd-actions">
+            <button class="btn btn-primary btn-block" id="add-btn">أضف إلى السلة</button>
+            <a href="cart.html" class="btn btn-dark">عرض السلة</a>
+          </div>
+
+          <ul class="spec-list">
+            ${p.specs.map(s => `<li><svg viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${s}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    `;
+
+    const qtyInput = document.getElementById("qty-input");
+    document.getElementById("qty-minus").onclick = () => { qtyInput.value = Math.max(1, (+qtyInput.value || 1) - 1); };
+    document.getElementById("qty-plus").onclick = () => { qtyInput.value = Math.min(p.stock, (+qtyInput.value || 1) + 1); };
+    document.getElementById("add-btn").onclick = () => addToCart(p.id, Math.max(1, +qtyInput.value || 1));
+
+    // منتجات مشابهة من نفس الفئة
+    const related = ONEMI_PRODUCTS.filter(x => x.category === p.category && x.id !== p.id).slice(0, 4);
+    if (related.length){
+      document.getElementById("related-wrap").style.display = "block";
+      document.getElementById("related-grid").innerHTML = related.map(productCardHTML).join("");
+    }
+  }
+</script>
+</body>
+</html>
